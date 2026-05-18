@@ -60,11 +60,84 @@ The route is protected by `MaintenanceMiddleware`, so Firebase Remote Config for
 
 ## Aether — Setup & Verification
 
-1. `flutter pub get`
-2. `dart run build_runner build --delete-conflicting-outputs`  (regenerates `app_routes.gr.dart` to include `AetherRoute`)
-3. `flutter analyze` — must report **zero** warnings/errors (the project's `analysis_options.yaml` is already stricter than the Aether spec).
-4. `flutter test test/raid_concurrency_test.dart` — must show **all tests passed** (50 concurrent joins → exactly 15 succeed).
-5. `dart aether_linter.dart` — runs the two above and emits `ARCHITECTURE_REPORT.md`. Commit that file with the submission.
+### One-time machine setup
+
+```bash
+# Confirm the Flutter SDK is healthy. If `flutter_tester` is missing from
+# the cache (you'll see "Failed to find .../flutter_tester in the search
+# path" when running tests) re-fetch the engine artifacts:
+flutter precache
+flutter doctor -v
+```
+
+### Project bootstrap (run once after pulling)
+
+```bash
+# 1. Resolve packages (cloud_firestore + fake_cloud_firestore are the
+#    only new entries vs. the rest of the app).
+flutter pub get
+
+# 2. Regenerate the auto_route table so `AetherRoute` exists in
+#    app_routes.gr.dart. Without this step the route registration in
+#    lib/service/navigation/app_routes.dart won't compile.
+dart run build_runner build --delete-conflicting-outputs
+```
+
+### Firebase prerequisites
+
+The Geo-Raid and Engagement Chat both speak to Cloud Firestore. Before the
+device build can hit live data you need to:
+
+1. Open Firebase Console → **Build → Firestore Database → Create database**
+   for the `flutterbysajid` project. Pick a region close to your users
+   (e.g. `asia-south1`) and start in **Test mode** for the assignment —
+   tighten the rules before production.
+2. The Android `google-services.json` already lives under
+   `android/app/src/stage/` and `android/app/src/prod/`, and is wired in
+   via `com.google.gms.google-services`. Nothing to add there.
+3. iOS requires a `GoogleService-Info.plist` (drop it into `ios/Runner/`
+   and add it to the Runner target) — Android-only testing can skip this.
+
+### Run the app (stage flavor)
+
+```bash
+# Android debug install + run
+flutter run --flavor stage -t lib/main.dart \
+  --dart-define-from-file=stage_env.json
+
+# iOS debug
+flutter run --flavor stage -t lib/main.dart \
+  --dart-define-from-file=stage_env.json -d ios
+
+# Build a stage APK (kept here for parity with the team's build matrix)
+flutter build apk --debug --flavor stage \
+  --dart-define-from-file=stage_env.json
+```
+
+Once the app boots, navigate to **`/aether`** (or push `const AetherRoute()`
+from any screen) to land on the single-screen nervous system.
+
+### Run the concurrency test
+
+The harness is host-only (uses `FakeFirebaseFirestore` in-process) so it
+does **not** need a flavor or `--dart-define`:
+
+```bash
+flutter test test/raid_concurrency_test.dart
+```
+
+Expected: `All tests passed!` with the Thundering-Herd group reporting
+exactly 15 successful joins out of 50 concurrent calls.
+
+### Run the architecture linter
+
+```bash
+dart aether_linter.dart
+```
+
+This runs `flutter analyze` and the concurrency test back-to-back and
+writes `ARCHITECTURE_REPORT.md` next to it. Commit that file with the
+submission; the reviewers grade off its pass/fail markers.
 
 ## Aether — Cost Optimisation Strategy (Firebase Bill)
 
