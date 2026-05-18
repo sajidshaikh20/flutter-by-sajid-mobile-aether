@@ -1,4 +1,3 @@
-import 'dart:async';
 
 import '../../../utils/exports.dart';
 
@@ -73,7 +72,7 @@ class AetherCubit extends BaseCubit<AetherState> {
     if (state.isJoining) {
       return;
     }
-    emit(state.copyWith(isJoining: true, lastJoinSucceeded: null));
+    emit(state.copyWith(isJoining: true));
     final bool ok = await _raidService.joinRaid(userId: localUserId);
     emit(state.copyWith(isJoining: false, lastJoinSucceeded: ok));
   }

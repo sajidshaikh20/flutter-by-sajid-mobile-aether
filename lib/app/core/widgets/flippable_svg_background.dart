@@ -30,7 +30,10 @@ class FlippableSvgBackground extends StatelessWidget {
       alignment: Alignment.center,
       // Flip horizontally if the current language is not English
       transform: Matrix4.identity()
-        ..scale(context.isEnglishLanguage ? 1.0 : -1.0, 1.0),
+        ..setEntry(3, 2, 0.001)
+        ..rotateY(
+          Localizations.localeOf(context).languageCode != 'en' ? pi : 0,
+        ),
       child: SvgPicture.asset(
         assetPath,
         fit: fit,

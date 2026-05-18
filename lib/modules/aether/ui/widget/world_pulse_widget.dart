@@ -1,5 +1,4 @@
 import '../../../../utils/exports.dart';
-import '../../service/world_pulse_service.dart';
 
 /// World-Pulse countdown — full-width hero banner.
 ///

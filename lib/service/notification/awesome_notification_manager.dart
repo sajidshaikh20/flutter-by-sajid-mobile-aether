@@ -36,9 +36,7 @@ Future<void> onActionReceivedMethod(ReceivedAction receivedAction) async {
   // Type :-- 'Promotional' ---> Home Screen
 
   DebugLog.instance.t('on Action Received Method ');
-  Map<String, String?> payload = receivedAction.payload ?? <String, String?>{};
 
-  String type = payload['type']?.toString().toLowerCase() ?? '';
 
 
 }
